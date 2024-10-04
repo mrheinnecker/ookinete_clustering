@@ -128,7 +128,7 @@ gcol_clust <- function(){
   
 }
 
-final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec"){
+final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec", size_txt=2, size_pts=5){
   
   METHOD <- "complete"
   
@@ -399,7 +399,7 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
     geom_line(aes(y=mn_time),
               linetype=2)+
     geom_point(#y=13.75, 
-      size=5,
+      size=size_pts,
       aes(color=as.character(cluster),
           y=time)
     )+
@@ -407,25 +407,33 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
     scale_color_manual(values=gcol_clust())+
     ggnewscale::new_scale_color()+
     
-    geom_text(aes(label=index,
-                  y=time,
-                  color=ifelse(index %in% c(1:4, 6,8,10), "b", "w")),
-              size=2,
+    # geom_text(aes(label=index,
+    #               y=time,
+    #               color=ifelse(index %in% c(1:4, 6,8,10), "b", "w")),
+    #           size=size_txt,
+    #           show.legend=F)+
+    geom_text_repel(aes(label=index,
+                  y=time
+                  #color=ifelse(index %in% c(1:4, 6,8,10), "b", "w")
+                  ),
+                  max.overlaps = 500,
+              size=size_txt,
               show.legend=F)+
     scale_color_manual(breaks = c("b", "w"),
                        values = c("black", "white"))+
-    # geom_point(#y=13.75,
-    #            shape=1,
-    #            size=5,
-    #            color="black",
-    #            aes(y=time)
-    #            #aes(color=as.character(cluster)
-    #                
-    # )+
+    geom_point(#y=13.75,
+               shape=1,
+               size=size_pts,
+               color="black",
+               aes(y=time)
+               #aes(color=as.character(cluster)
+
+    )+
     
     
     scale_y_continuous(#limits = c(8,20), 
-      breaks = c(8,12,16,20))+
+      breaks = c(8,12,16,20),
+      expand = c(0.1,0.1))+
     scale_x_continuous(breaks = seq(-0.3, 0.3, 0.1),
                        labels = round((-1)*seq(-0.3, 0.3, 0.1),1))+
     theme_bw()+
@@ -454,9 +462,17 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   #p <- 
   umap_plot <- 
     ggplot(u, aes(y = X1, x= X2)) + 
-    geom_point(size=5, #shape=1, 
+    geom_point(size=size_pts, #shape=1, 
                aes(color=as.character(cluster)),
                show.legend = F)+
+    geom_point(#y=13.75,
+      shape=1,
+      size=size_pts,
+      color="black",
+      #aes(y=time)
+      #aes(color=as.character(cluster)
+      
+    )+
     scale_color_manual(values = gcol_clust())
   
   
@@ -782,8 +798,11 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
     cowplot::plot_grid(
       
       umap_plot+
-        geom_text(aes(label=seriation_id),
-                  size=2)+
+        geom_text_repel(aes(label=seriation_id),
+                  size=size_txt,
+                  max.overlaps = 500)+
+        # geom_text(aes(label=seriation_id),
+        #           size=size_txt)+
         theme_bw(),
       hm_dendro,
       ncol=2,
@@ -796,10 +815,16 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
       
       umap_plot+
         ggnewscale::new_scale_color()+
-        geom_text(aes(label=seriation_id,
-                      color=ifelse(seriation_id %in% c(1:4, 6,8,10), "b", "w")),
-                  size=2,
-                  show.legend=F)+
+        # geom_text(aes(label=seriation_id,
+        #               color=ifelse(seriation_id %in% c(1:4, 6,8,10), "b", "w")),
+        #           size=size_txt,
+        #           show.legend=F)+
+        geom_text_repel(aes(label=seriation_id,
+                      #color=ifelse(seriation_id %in% c(1:4, 6,8,10), "b", "w")
+                      ),
+                  size=size_txt,
+                  show.legend=F,
+                  max.overlaps = 500)+
         scale_color_manual(breaks = c("b", "w"),
                            values = c("black", "white"))+
         scale_y_continuous(breaks=c(-8:5))+
@@ -830,6 +855,8 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   
   dir.create(outdir)
   
+  write_csv(seriation_id_mapping,
+            file=file.path(outdir, "cell_id_mapping.csv"))
   
   pdf(file.path(outdir, "combined_with_seriation.pdf"), width=18, height=11.46497)
   print(ser_in_main_fig)
@@ -865,8 +892,8 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   dev.off()
   
   
-  WIDTH <- 50
-  HEIGHT <- 30
+  WIDTH <- 25
+  HEIGHT <- 15
   
   ggsave(file.path(outdir, "pca.svg"), plot=cluster_plot, width = WIDTH, height= HEIGHT, unit="cm")
   
@@ -875,6 +902,8 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   ggsave(file.path(outdir, "contributors.svg"), plot=contrib_plot, width = WIDTH, height= HEIGHT, unit="cm")
   
   ggsave(file.path(outdir, "heatmap.svg"), plot=hm_raw_features, width = WIDTH, height= HEIGHT, unit="cm")
+  
+  ggsave(file.path(outdir, "combined_with_seriation.svg"), plot=ser_in_main_fig, width = WIDTH, height= HEIGHT, unit="cm")
   
   
   ggsave(file.path(outdir, "combined_in.svg"), plot=comb_plots_in, width = WIDTH, height= HEIGHT, unit="cm")
