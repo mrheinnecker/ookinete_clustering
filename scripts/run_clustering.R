@@ -13,7 +13,7 @@ full_data <- read_tsv("/home/rheinnec/schwab/repos/ookinete_clustering/data/full
 size_tot=4
 
 
-outdir <- "/g/schwab/Marco/ook_plots/cfinal_07_10"
+outdir <- "/g/schwab/Marco/ook_plots/cfinal_28_10"
 
 final_figure_plot(clustering_data, 
                   cutoff=0.18,  
@@ -143,9 +143,17 @@ dev.off()
 
 
 
+make_heatmap_figure(select(full_data %>% filter(!cell_id %in% c("z1", "z16", "z5")), all_of(feature_sorter$feature)))+
+  scale_x_discrete(breaks=feature_sorter$feature, 
+                   labels=feature_sorter$neds_name)+
+  scale_y_discrete(breaks=feature_sorter$feature, 
+                   labels=feature_sorter$neds_name)+
+  #scale_fil
+  theme(
+    axis.text.x = element_text(angle=315, hjust=0)
+  )
 
 
 
-
-
+c("has_micronemes", "vol_cell"   ,    "n_cryst" ,       "has_nuctail",    "has_micronuc"   ,"retort_length",  "is_full"  )
 

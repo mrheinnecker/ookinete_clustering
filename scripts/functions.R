@@ -18,7 +18,7 @@ make_heatmap_figure <- function(num_data){
   heatmap <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
     geom_tile(color = "white")+
     geom_text(aes(label=value))+
-    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+    scale_fill_gradient2(low = "blue", high = "firebrick", mid = "white", 
                          midpoint = 0, limit = c(-1,1), space = "Lab", 
                          name="Spearman\nCorrelation") +
     theme_minimal()+ 
@@ -32,11 +32,11 @@ make_heatmap_figure <- function(num_data){
 
 
 normalize_column <- function(col) {
-  (col - min(col)) / (max(col) - min(col))
+  (col - min(col, na.rm=T)) / (max(col, na.rm=T) - min(col, na.rm=T))
 }
 
 
-dendroplot <- function(my_dat, dend, cutoff){
+dendroplot <- function(my_dat, dend, cutoff, size_txt){
   
   stage_labels <- tibble(
     lab=c("Stage I", "Stage II", "Stage III", "Stage IV", "Stage V", "Stage VI", "Stage VII"),
@@ -48,8 +48,8 @@ dendroplot <- function(my_dat, dend, cutoff){
     geom_hline(yintercept=cutoff, linetype=2)+
     geom_tile(
       data=my_dat,
-      height=0.15,
-      aes(x=x, y=-0.075, fill=as.character(cluster)),
+      height=0.25,
+      aes(x=x, y=-0.125, fill=as.character(cluster)),
       show.legend = F
     )+
     scale_fill_manual(values= gcol_clust(),
@@ -58,8 +58,9 @@ dendroplot <- function(my_dat, dend, cutoff){
       data=stage_labels,
       inherit.aes = F,
       show.legend = F,
+      size=size_txt,
       aes(x=x,
-          y=-0.04,
+          y=-0.06,
           color=lab,
           label=lab)
     )+
@@ -82,11 +83,12 @@ dendroplot <- function(my_dat, dend, cutoff){
           #label %in% c("z13", "z14", "z15", "z17"), 
           "b", "w")),
       aes(x=x, 
-          y=-0.1, 
+          y=-0.14, 
           label=str_replace_all(label, "z", ""), 
           color=txt_col
       ),
       show.legend = F,
+      size=size_txt,
       #color="white",
       vjust=1,
       hjust=0.5,
@@ -438,7 +440,7 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
                        labels = round((-1)*seq(-0.3, 0.3, 0.1),1))+
     theme_bw()+
     theme(legend.position = "none")+
-    ylab("Time (h)")+
+    ylab("time (h)")+
     xlab("spectral seriation value")
   
   
@@ -480,7 +482,7 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   
   
   
-  heatmap <- make_heatmap_figure(norm_data)+
+  heatmap <- make_heatmap_figure(num_data)+
     theme(axis.title = element_blank(),
           axis.text.x = element_text(angle = 315, hjust = 0))
   
@@ -514,7 +516,7 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
     mutate(label=seriation_id)
   
   dendro <- dendroplot(dendro_data, 
-                       dend, cutoff)
+                       dend, cutoff, size_txt)
   
   
   #plot(dend)
@@ -734,14 +736,14 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
     
     feature=feature_vec,
     neds_lab=c(
-      "Nuclear Tail",
-      "Cellular Volume",
-      "Nuclear Appendix",
-      "Nucleolus",
-      "Retort Length",
-      "Crystalloids",
-      "Micronemes",
-      "Nuclear Relocalization"
+      "nuclear tail",
+      "cellular volume",
+      "nuclear appendix",
+      "nucleolus",
+      "retort length",
+      "crystalloids",
+      "micronemes",
+      "nuclear relocalization"
     )
     
   )
@@ -777,38 +779,42 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
       
       dendro+
         scale_x_discrete(limits=c("1","25"))+
-        theme_void(),
+        theme_void()+
+        theme(
+          #text = element_text(family = "Arial")
+          ),
       p_empty,
       hm_raw_features+
         scale_y_discrete(
-          #position = "right",
+          position = "right",
           breaks=neds_labs$feature,
           labels=neds_labs$neds_lab
         )+
         theme(legend.position = "none",
-              axis.text.y = element_text(hjust=0.5)),
+              #text = element_text(family = "Arial"),
+              axis.text.y.right  = element_text(hjust=0.5)),
       ncol=1,
       align="v",
       axis = "tblr",
-      rel_heights=c(2.4,0.4,1.7)
+      rel_heights=c(0.5,0.18,0.7)
       
     )
   
-  comb_plots_out <- 
-    cowplot::plot_grid(
-      
-      umap_plot+
-        geom_text_repel(aes(label=seriation_id),
-                  size=size_txt,
-                  max.overlaps = 500)+
-        # geom_text(aes(label=seriation_id),
-        #           size=size_txt)+
-        theme_bw(),
-      hm_dendro,
-      ncol=2,
-      rel_widths = c(1,2.6)
-      
-    ) 
+  # comb_plots_out <- 
+  #   cowplot::plot_grid(
+  #     
+  #     umap_plot+
+  #       geom_text_repel(aes(label=seriation_id),
+  #                 size=size_txt,
+  #                 max.overlaps = 500)+
+  #       # geom_text(aes(label=seriation_id),
+  #       #           size=size_txt)+
+  #       theme_bw(),
+  #     hm_dendro,
+  #     ncol=2,
+  #     rel_widths = c(1,2.6)
+  #     
+  #   ) 
   
   comb_plots_in <- 
     cowplot::plot_grid(
@@ -830,11 +836,11 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
         scale_y_continuous(breaks=c(-8:5))+
         scale_x_continuous(breaks = c(-4:5))+
         theme_bw()+
-        theme(panel.grid.minor = element_blank())+
-        coord_fixed(),
+        theme(panel.grid.minor = element_blank()),#+
+        #coord_fixed(),
       hm_dendro_in,
       ncol=2,
-      rel_widths = c(1.32,2.6),
+      rel_widths = c(1,2.6),
       axis = "tl",
       align="hv"
       
@@ -843,12 +849,67 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   ser_in_main_fig <-
     
     cowplot::plot_grid(
-      seriation_plot,
+      seriation_plot+theme(panel.grid.minor = element_blank()),
       comb_plots_in,
       ncol=1,
-      rel_heights = c(1,3)
+      rel_heights = c(2,2)
       #axis = "l",
       #align="v"
+    )
+  
+  
+  ## new arrangement... seriation inside
+  
+  
+  ser_in_comb <-
+    cowplot::plot_grid(
+      
+      seriation_plot+
+        scale_y_continuous(
+          position = "right",
+          breaks = c(8,12,16,20),
+          expand = c(0.2,0.2)
+        )+
+        theme(
+          #text = element_text(family = "Arial")
+          #axis.title.x = element_blank(),
+                           ),
+      hm_dendro_in,
+      ncol=1,
+      rel_heights = c(1,3)
+      #axis = "tl",
+      #align="hv"
+      
+    ) %>%
+    cowplot::plot_grid(
+      
+      umap_plot+
+        ggnewscale::new_scale_color()+
+        # geom_text(aes(label=seriation_id,
+        #               color=ifelse(seriation_id %in% c(1:4, 6,8,10), "b", "w")),
+        #           size=size_txt,
+        #           show.legend=F)+
+        geom_text_repel(aes(label=seriation_id),
+                         max.overlaps=1000,
+                            #color=ifelse(seriation_id %in% c(1:4, 6,8,10), "b", "w")
+        
+        size=size_txt,
+        show.legend=F,
+        #max.overlaps = 500
+        )+
+        scale_color_manual(breaks = c("b", "w"),
+                           values = c("black", "white"))+
+        scale_y_continuous(breaks=seq(-8,5,2))+
+        scale_x_continuous(breaks = seq(-4, 5, 2))+
+        theme_bw()+
+        theme(panel.grid.minor = element_blank()),
+              #text = element_text(family = "Arial")),#+
+        #coord_fixed(),
+      p_empty,
+      .,
+      ncol=3,
+      rel_widths = c(1,0.1,5)
+      
     )
   
   
@@ -857,6 +918,11 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   
   write_csv(seriation_id_mapping,
             file=file.path(outdir, "cell_id_mapping.csv"))
+  
+  
+  pdf(file.path(outdir, "combined_with_seriation_inside.pdf"), width=12.5, height=6.5)
+  print(ser_in_comb)
+  dev.off()
   
   pdf(file.path(outdir, "combined_with_seriation.pdf"), width=18, height=11.46497)
   print(ser_in_main_fig)
@@ -895,6 +961,9 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   WIDTH <- 25
   HEIGHT <- 15
   
+  
+  ggsave(file.path(outdir, "combined_with_seriation_new.svg"), plot=ser_in_comb, width = 12.5*0.7, height= 6.5*0.7, unit="in")
+  
   ggsave(file.path(outdir, "pca.svg"), plot=cluster_plot, width = WIDTH, height= HEIGHT, unit="cm")
   
   ggsave(file.path(outdir, "dendrogram.svg"), plot=dendro, width = WIDTH, height= HEIGHT, unit="cm")
@@ -912,5 +981,5 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   
   ggsave(file.path(outdir, "jitterplot.svg"), plot=jitterplot, width = WIDTH, height= HEIGHT, unit="cm")
   
-  return(comb_plots_in)
+  return(ser_in_comb)
 }
