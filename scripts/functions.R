@@ -135,7 +135,7 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   METHOD <- "complete"
   
   num_data <- rel_feature_data %>%
-    select(-cell_id, -stage_marco, -sec_id, -time) %>%
+    select(-cell_id, -sec_id, -time) %>%
     mutate_all(
       .funs = as.numeric
     )
@@ -354,8 +354,6 @@ final_figure_plot <- function(rel_feature_data, cutoff=1, outdir="/home/rheinnec
   
   my_dat <- tibble(cluster=clusters, 
                    label=rel_feature_data$cell_id,
-                   sec_col=rel_feature_data$stage_marco,
-                   #x=c(1:length(clusters)),
                    order=factor(c(1:length(clusters)), level=order.dendrogram(dend))) %>%
     arrange(order) %>%
     mutate(x=c(1:length(clusters)))

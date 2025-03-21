@@ -2,18 +2,18 @@ library(tidyverse)
 library(ggrepel)
 library(proxy)
 library(uwot)
-source("/home/rheinnec/schwab/repos/ookinete_clustering/scripts/functions.R")
+source("/g/schwab/Marco/repos/ookinete_clustering/scripts/functions.R")
 
-clustering_data <- read_tsv("/home/rheinnec/schwab/repos/ookinete_clustering/data/clustering_data.tsv")
+clustering_data <- read_tsv("/g/schwab/Marco/repos/ookinete_clustering/data/clustering_data.tsv") 
 
 
-full_data <- read_tsv("/home/rheinnec/schwab/repos/ookinete_clustering/data/full_data.tsv", skip=1)
+full_data <- read_tsv("/g/schwab/Marco/repos/ookinete_clustering/data/full_data.tsv")
 
 
 size_tot=4
 
 
-outdir <- "/g/schwab/Marco/ook_plots/cfinal_28_10"
+outdir <- "/g/schwab/Marco/ook_plots/cfinal_210325"
 
 final_figure_plot(clustering_data, 
                   cutoff=0.18,  
@@ -23,7 +23,7 @@ final_figure_plot(clustering_data,
 
 
 
-final_staging <- read_tsv(file.path("/home/rheinnec/schwab/repos/ookinete_clustering/data/final_staging.tsv"))
+final_staging <- read_tsv(file.path("/g/schwab/Marco/repos/ookinete_clustering/data/final_staging.tsv"))
 
 
 
@@ -33,10 +33,8 @@ cell_id_mapping <- read_csv(file.path(outdir, "cell_id_mapping.csv")) %>%
            seriation_id=c(26,27,28))
   )
 
-norm_between_one_zero <- full_data  %>% 
-  #left_join(cell_id_mapping) %>%
-  
-  select(-cell_id, -stage_marco, -dish, -has_sc) %>%
+norm_between_one_zero <- full_data %>%
+  select(-cell_id) %>%
   as.matrix() %>% apply(., 2, normalize_column) 
 
 
@@ -60,7 +58,8 @@ feature_sorter <- tibble(
     'retort_length',
     'n_cryst',
     'has_micronemes', 
-    'is_full'),
+    'is_full',
+    "seriation_id"),
   
   
   neds_name= c(
@@ -81,13 +80,33 @@ feature_sorter <- tibble(
     "retort length",
     "crystalloids",
     "micronemes",
-    "nuclear relocalization"
+    "nuclear relocalization",
+    "seriation id"
+    
+  ),
+  
+  neds_name_table= c(
+    
+    "nuclear tail",
+    "synaptonemal complexes volume",
+    "nuclear volume",
+    "cellular volume",
+    'apicoplast area',
+    "nuclear area",
+    'apicoplast volume',
+    "nuclear sphericity",
+    "cellular sphericity",
+    "cellular area",
+    'apicoplast branching',
+    "nucleolar volume",
+    "nuclear appendix",
+    "retort length",
+    "crystalloids",
+    "micronemes",
+    "nuclear relocalization",
+    "cell id"
     
   )
-  
-  
-  
-  
   
 )
 
@@ -155,5 +174,39 @@ make_heatmap_figure(select(full_data %>% filter(!cell_id %in% c("z1", "z16", "z5
 
 
 
-c("has_micronemes", "vol_cell"   ,    "n_cryst" ,       "has_nuctail",    "has_micronuc"   ,"retort_length",  "is_full"  )
+final_ov_table_pre <- full_data %>%
+  select(-has_sc) %>%
+  left_join(cell_id_mapping)
+
+
+new_names <- lapply(names(final_ov_table_pre), function(ON){
+  print(ON)
+  new <- feature_sorter %>%
+    filter(feature==ON) 
+  
+  print(new)
+  
+  if(nrow(new)==0){
+    return(ON)
+  } else {
+    return(pull(new, neds_name))
+  }
+  
+}) %>%
+  unlist()
+
+
+colnames(final_ov_table_pre) <- new_names
+
+
+final_ov_table <- final_ov_table_pre %>%
+  select(-cell_id) %>%
+  .[c(ncol(.), 2:(ncol(.)-1))]
+
+
+write_tsv(final_ov_table,
+          file=file.path(outdir, "final_overview.tsv"))
+
+
+
 
